@@ -1,3 +1,4 @@
 data/train_data.pickle
 data/test_data.pickle
 
+data/*.pickle
