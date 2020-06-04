@@ -27,10 +27,10 @@ data_check = glob.glob('./data/*.pickle')
 #
 # print('[shape]: train_data: '+ str(train_data.shape))
 # print('[shape]: test_data: '+ str(test_data.shape))
-protein_data = train_data[['protein_name', 'seq', 'BERT']]
-protein_data.drop_duplicates('protein_name', inplace=True)
-with open('./data/protein_data.pickle', 'wb') as f:
-    pickle.dump(protein_data, f, pickle.HIGHEST_PROTOCOL)
+# protein_data = train_data[['protein_name', 'seq', 'BERT']]
+# protein_data.drop_duplicates('protein_name', inplace=True)
+# with open('./data/protein_data.pickle', 'wb') as f:
+#     pickle.dump(protein_data, f, pickle.HIGHEST_PROTOCOL)
 
 
 with open('./data/protein_data.pickle', 'rb') as f:
