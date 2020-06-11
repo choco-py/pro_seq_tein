@@ -5,9 +5,10 @@ import glob
 import src.data_loader as data_preprocessor
 import os
 import tensorflow as tf
-
+import src.model as ProteinSeq
 path = os.getcwd()
 print(path)
+import importlib
 
 now = path.split('/')[-1]
 if now != 'pro_seq_tein':
@@ -37,5 +38,17 @@ with open('./data/protein_data.pickle', 'rb') as f:
     protein_data = pickle.load(f)
 print('[shape]: protein_data: '+ str(protein_data.shape))
 
-protein_data
 protein_data.iloc[0].BERT.shape
+# %%
+
+importlib.reload(ProteinSeq)
+
+Protein_Seq = ProteinSeq.ProteinSeq
+
+protein_1st = Protein_Seq(
+    input_shape=(None, 403, 768),
+    label_shape=(None, ),
+    batch_size=128,
+    buffer_size=1000,
+    dropout=0.7,
+)
