@@ -1,5 +1,8 @@
 data/train_data.pickle
 data/test_data.pickle
 
+<<<<<<< HEAD
 model_save/*
+=======
+>>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 data/*.pickle

@@ -38,7 +38,6 @@ with open('./data/protein_data.pickle', 'rb') as f:
     protein_data = pickle.load(f)
 print('[shape]: protein_data: '+ str(protein_data.shape))
 
-<<<<<<< HEAD
 one_hot = pd.get_dummies(protein_data['protein_name'])
 protein_data['label']=list(np.array(one_hot))
 # %%
@@ -49,23 +48,10 @@ Protein_Seq = ProteinSeq.ProteinSeq
 protein_1st = Protein_Seq(
     input_shape=(None, 403, 768),
     label_shape=(None, 488),
-=======
-protein_data.iloc[0].BERT.shape
-# %%
-
-importlib.reload(ProteinSeq)
-
-Protein_Seq = ProteinSeq.ProteinSeq
-
-protein_1st = Protein_Seq(
-    input_shape=(None, 403, 768),
-    label_shape=(None, ),
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
     batch_size=128,
     buffer_size=1000,
     dropout=0.7,
 )
-<<<<<<< HEAD
 # %%
 protein_1st.train(
     input_=protein_data['BERT'].tolist(),
@@ -76,5 +62,3 @@ protein_1st.train(
     model_save_dir='./model_save',
     pre_trained_path=None,
 )
-=======
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
