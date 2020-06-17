@@ -23,11 +23,7 @@ class ProteinSeq(NeuralNetworkModel):
     def __init__(
         self,
         input_shape=(None, 410, 528),
-<<<<<<< HEAD
         label_shape=(None, 488),
-=======
-        label_shape=(None, ),
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
         batch_size=128,
         buffer_size=1000,
         dropout=0.7,
@@ -37,11 +33,7 @@ class ProteinSeq(NeuralNetworkModel):
 
 
         self.input_shape = input_shape
-<<<<<<< HEAD
         self.label_shape = label_shape
-=======
-        self. label_shape = label_shape
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 
         self.EPOCH_NUM = 0
         self.BUFFER_SIZE = buffer_size
@@ -50,11 +42,8 @@ class ProteinSeq(NeuralNetworkModel):
 
         self._x_tensor = None
         self._x_batch_tensor = None
-<<<<<<< HEAD
         self._x_label_tensor = None
         self._x_batch_label_tensor = None
-=======
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 
         self.next_batch = None
         self.data_init_op = None
@@ -70,10 +59,7 @@ class ProteinSeq(NeuralNetworkModel):
 
         self.input(
             input_shape=self.input_shape,
-<<<<<<< HEAD
             label_shape=self.label_shape,
-=======
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
         )
 
         self.build()
@@ -120,30 +106,18 @@ class ProteinSeq(NeuralNetworkModel):
     def input(
         self,
         input_shape=(None, 410, 528),
-<<<<<<< HEAD
         label_shape=(None, 488),
-=======
-        label_shape=(None,),
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
     ):
 
         X_t = tf.placeholder(
             tf.float32,
-<<<<<<< HEAD
             self.input_shape,
-=======
-            input_shape,
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
             name='protein_tensor_interface',
         )
 
         X_label_t = tf.placeholder(
             tf.float32,
-<<<<<<< HEAD
             self.label_shape,
-=======
-            shape=label_shape,
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
             name='label_tensor_interface',
         )
 
@@ -153,19 +127,14 @@ class ProteinSeq(NeuralNetworkModel):
         ))
 
         dataset = dataset.shuffle(
-<<<<<<< HEAD
             buffer_size= 3*self.BATCH_SIZE,
         )
         dataset = dataset.prefetch(
             buffer_size=3*self.BATCH_SIZE,
-=======
-            buffer_size= self.BUFFER_SIZE,
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
         )
         dataset = dataset.batch(
             batch_size=self.BATCH_SIZE,
         )
-<<<<<<< HEAD
         dataset = dataset.flat_map(
             lambda data_x, data_z: tf.data.Dataset.zip(
                 (
@@ -174,31 +143,20 @@ class ProteinSeq(NeuralNetworkModel):
                 )
             )
         )
-=======
-
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
         data_op = dataset.make_initializable_iterator()
 
         data_init_op = data_op.initializer
 
-<<<<<<< HEAD
         next_batch = X_t_batch, X_label_batch = data_op.get_next()
-=======
-        next_batch = ((X_t_batch, X_label_batch)) = data_op.get_next()
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 
         print(f'[shape] protein: {X_t_batch.get_shape()}')
 
         self._x_tensor = X_t
         self._x_batch_tensor = X_t_batch
-<<<<<<< HEAD
         self._x_label_tensor = X_label_t
         self._x_batch_label_tensor = X_label_batch
         self.next_batch = next_batch
         self.data_init_op = data_init_op
-=======
-
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 
     def _layer_conv2d(
         self,
@@ -206,19 +164,11 @@ class ProteinSeq(NeuralNetworkModel):
         out_channels,
         dropout=0.7,
         reuse=tf.AUTO_REUSE,
-<<<<<<< HEAD
         name='conv2d',
     ):
         # print(name + ' ' + '-'*20)
         # print(_input.get_shape())
         with tf.variable_scope(name, reuse=reuse) as scope:
-=======
-        name='layer_conv2d',
-    ):
-        # print(name + ' ' + '-'*20)
-        # print(_input.get_shape())
-        with tf.variable_scope(name, reuse=reuse):
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 
             prev_length = _input.get_shape()[-2]
             prev_channels = _input.get_shape()[-1]
@@ -241,7 +191,6 @@ class ProteinSeq(NeuralNetworkModel):
 
             conv2d = tf.nn.conv2d(
                 _input,
-<<<<<<< HEAD
                 filter=filter_weight,
                 strides=[1, 1, 1, 1],
                 padding="SAME",
@@ -254,20 +203,12 @@ class ProteinSeq(NeuralNetworkModel):
                 initializer=initializer,
             )
             conv2d = tf.nn.bias_add(conv2d, bias)
-=======
-                filter_weight,
-                strides=[1, 1, 1, 1],
-                padding="SAME",
-                name=name,
-            )
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 
             self._print_layer(
                 name=name,
                 input_shape=_input.get_shape(),
                 output_shape=conv2d.get_shape(),
             )
-<<<<<<< HEAD
             #
             # batch_norm = tf.layers.batch_normalization(
             #     inputs=conv2d,
@@ -276,16 +217,6 @@ class ProteinSeq(NeuralNetworkModel):
 
             activation = tf.nn.relu(
                 conv2d,
-=======
-
-            batch_norm = tf.layers.batch_normalization(
-                inputs=conv2d,
-                name='batch_norm',
-            )
-
-            activation = tf.nn.relu(
-                batch_norm,
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
                 name='activation',
             )
 
@@ -294,10 +225,7 @@ class ProteinSeq(NeuralNetworkModel):
                 ksize=[1, 2, 2, 1],
                 strides=[1, 2, 2, 1],
                 padding='SAME',
-<<<<<<< HEAD
                 name='pooling',
-=======
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
             )
             self._print_layer(
                 name='max_pooling',
@@ -307,25 +235,18 @@ class ProteinSeq(NeuralNetworkModel):
 
             output = tf.nn.dropout(pooling, dropout)
 
-<<<<<<< HEAD
         layer_name = conv2d.name
         layer_shape = conv2d.get_shape()
         layer_info = f'[shape] {layer_name}: {layer_shape}'
 
         print(layer_info)
 
-=======
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
         return output
 
     def protein_network(
         self,
         proteins,
-<<<<<<< HEAD
         name='protein_network',
-=======
-        name='protein_bert_network',
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
         reuse=tf.AUTO_REUSE,
         dropout=0.7,
         ):
@@ -338,7 +259,6 @@ class ProteinSeq(NeuralNetworkModel):
             )
             conv_layer1 = self._layer_conv2d(
                 _input=proteins,
-<<<<<<< HEAD
                 out_channels=16,
                 dropout=self.DROPOUT,
                 name='conv2d_1',
@@ -395,51 +315,6 @@ class ProteinSeq(NeuralNetworkModel):
         print(dense_layer1.name)
         return dense_layer2
 
-=======
-                out_channels=256,
-                dropout=self.DROPOUT,
-                name='conv2d_1',
-            )
-            conv_layer2 = self._layer_conv2d(
-                _input=conv_layer1,
-                out_channels=64,
-                dropout=self.DROPOUT,
-                name='conv2d_2',
-            )
-            conv_layer3 = self._layer_conv2d(
-                _input=conv_layer2,
-                out_channels=16,
-                dropout=self.DROPOUT,
-                name='conv2d_3',
-            )
-            conv_layer4 = self._layer_conv2d(
-                _input=conv_layer3,
-                out_channels=8,
-                dropout=self.DROPOUT,
-                name='conv2d_4',
-            )
-
-            a = conv_layer4.get_shape()[-1]
-            b = conv_layer4.get_shape()[-2]
-
-            reshape = tf.reshape(
-                conv_layer4,
-                [-1,a*b],
-            )
-            dense_layer = tf.layers.dense(
-                tf.nn.elu(reshape),
-                20,
-                name="dense_layer",
-                reuse=reuse,
-            )
-            self._print_layer(
-                name='dense_layer',
-                input_shape=conv_layer4.get_shape(),
-                output_shape=dense_layer.get_shape(),
-            )
-
-        return dense_layer
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 
     def build(
         self,
@@ -447,11 +322,7 @@ class ProteinSeq(NeuralNetworkModel):
     ):
         print('\n[Protein_model]: '+ '='*30)
 
-<<<<<<< HEAD
         with tf.variable_scope('Protein_model', reuse=tf.AUTO_REUSE):
-=======
-        with tf.variable_scope('Protein_model', reuse=reuse):
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
 
             Input_X = tf.placeholder(
                 tf.float32,
@@ -460,7 +331,6 @@ class ProteinSeq(NeuralNetworkModel):
             )
             Input_X_label = tf.placeholder(
                 tf.float32,
-<<<<<<< HEAD
                 shape=self.label_shape,
                 name='Input_X_label',
             )
@@ -486,30 +356,6 @@ class ProteinSeq(NeuralNetworkModel):
             print(tf.GraphKeys.GLOBAL_VARIABLES,)
 
         with tf.variable_scope('optimization'):
-=======
-                shape=[None],
-                name='Input_X_label',
-            )
-
-        output = self.protein_network(
-            proteins=Input_X,
-            name='protein_network',
-            reuse=tf.AUTO_REUSE,
-            dropout=0.7,
-            )
-
-        with tf.name_scope('loss_scope'):
-
-            loss = tf.reduce_mean(
-                tf.nn.softmax_cross_entropy_with_logits(
-                    labels=output,
-                    logits=Input_X_label,
-                )
-            )
-
-        with tf.variable_scope('optimization'):
-
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
             optimizer = tf.train.AdamOptimizer(
                 learning_rate=.01,
                 name='optimizer_Adam',
@@ -517,13 +363,8 @@ class ProteinSeq(NeuralNetworkModel):
             train_op = optimizer.minimize(
                 loss,
                 var_list=tf.get_collection(
-<<<<<<< HEAD
                     tf.GraphKeys.GLOBAL_VARIABLES,
                     scope="Protein_model/protein_network",
-=======
-                    tf.GraphKeys.TRAINABLE_VARIABLES,
-                    scope='Protein_model',
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
                 )
             )
         variable_network = tf.get_collection(
@@ -536,10 +377,6 @@ class ProteinSeq(NeuralNetworkModel):
                 scope='Protein_model',
             )
         )
-<<<<<<< HEAD
-=======
-
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
         opt_init_op = tf.variables_initializer(
             var_list = tf.get_collection(
                 tf.GraphKeys.GLOBAL_VARIABLES,
@@ -687,14 +524,8 @@ class ProteinSeq(NeuralNetworkModel):
                             (X_t_batch, X_label_batch) = sess.run(self.next_batch)
 
                             (summary_train_op,
-<<<<<<< HEAD
                              summary_loss,
                              ) = sess.run(
-=======
-                             summary_input,
-                             summary_loss,
-                             err_rate,) = sess.run(
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
                                 [
                                     train_op,
                                      self.loss,
@@ -727,11 +558,7 @@ class ProteinSeq(NeuralNetworkModel):
                             batch_pct = int(20 * batch_num / train_len)
                             batch_bar = "[%s] " % (("#" * batch_pct) + ("-" * (20 - batch_pct)))
                             batch_msg = "\rBatch [%s/%s] " % (batch_num, train_len)
-<<<<<<< HEAD
                             batch_err = "err_rate: %.5f" % (summary_loss)
-=======
-                            batch_err = "err_rate: %.5f" % (err_rate)
->>>>>>> 37b6b53f22cc78c44ac6b5a1f0bac255cae10e50
                             # batch_dist = f'distance: {np.round(distance, 2)}'
                             batch_msg = batch_msg + batch_bar + batch_err# +batch_dist
 
