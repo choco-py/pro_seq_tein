@@ -1,0 +1,5 @@
+data/train_data.pickle
+data/test_data.pickle
+
+model_save/*
+data/*.pickle
