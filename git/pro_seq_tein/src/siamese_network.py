@@ -8,7 +8,6 @@ import importlib
 from math import ceil
 from math import ceil
 # from keras.regularizers import l2,l1
-# import xrange
 
 class NoValidationException(Exception):
     def __init__(self, valid_value):
@@ -48,7 +47,7 @@ class SiameseNet(NeuralNetworkModel):
         input_protein_shape=(None, 20),
         batch_size=128,
         buffer_size=1000,
-        dropout=1.0,
+        dropout=0.7,
         ):
 
         super().__init__()
@@ -109,6 +108,7 @@ class SiameseNet(NeuralNetworkModel):
 
 
         self.next_batch = None
+        self.data_init_op = None
         self.data_init_op = None
         self.data_init_op_eval = None
 
@@ -184,6 +184,9 @@ class SiameseNet(NeuralNetworkModel):
             )
         )
 
+
+
+
     def input(
         self,
         input_finger1_shape=(None, 1024),
@@ -199,19 +202,18 @@ class SiameseNet(NeuralNetworkModel):
         buffer_size = self.BUFFER_SIZE
         with tf.name_scope('input'):
 
+
             # First Input
             X_fp1_t = tf.placeholder(
                 tf.float32,
                 input_finger1_shape,
                 name='fingerprint1_tensor_interface',
             )
-
             X_fp2_t = tf.placeholder(
                 tf.float32,
                 input_finger2_shape,
                 name='fingerprint2_tensor_interface',
             )
-
             X_fp3_t = tf.placeholder(
                 tf.float32,
                 input_finger3_shape,
@@ -249,43 +251,49 @@ class SiameseNet(NeuralNetworkModel):
             )
 
             dataset_x = tf.data.Dataset.from_tensor_slices((
-                X_fp1_t, X_fp2_t, X_fp3_t, X_fp4_t, X_fp5_t, X_fp6_t,X_fp7_t,
+                X_fp1_t, X_fp2_t, X_fp3_t, X_fp4_t, X_fp5_t, X_fp6_t, X_fp7_t,
                 X_protein_t, X_label_t))
-
             dataset_x = dataset_x.shuffle(
-                buffer_size=10*self.BATCH_SIZE,
+                buffer_size=buffer_size,
+            )
+            dataset_x = dataset_x.prefetch(
+                buffer_size=3*self.BATCH_SIZE,
             )
             dataset_y = dataset_x.shuffle(
-                buffer_size=10*self.BATCH_SIZE,
+                buffer_size=buffer_size,
             )
+
             dataset_x = dataset_x.batch(
                 batch_size=self.BATCH_SIZE,
             )
+            # dataset_y = tf.data.Dataset.from_tensor_slices((
+            #     X_fp1_t, X_fp2_t, X_fp3_t, X_fp4_t, X_fp5_t, X_fp6_t, X_fp7_t,
+            #     X_protein_t, X_label_t))
             dataset_y = dataset_y.batch(
                 batch_size=self.BATCH_SIZE,
             )
-            dataset_x = dataset_x.prefetch(
-                buffer_size=1,
-            )
-            dataset_y = dataset_y.prefetch(
-                buffer_size=1,
-            )
+            # dataset_y = tf.data.Dataset.from_tensor_slices((
+            #     Y_fp1_t, Y_fp2_t, Y_fp3_t, Y_fp4_t, Y_fp5_t, Y_fp6_t, Y_fp7_t,
+            #     Y_protein_t, Y_label_t))
+            # dataset_y = dataset_y.shuffle(
+            #     buffer_size=buffer_size,
+            # )
+            # dataset_y = dataset_y.batch(
+            #     batch_size=self.BATCH_SIZE,
+            # )
+
             dataset = tf.data.Dataset.zip((dataset_x, dataset_y))
 
             data_op = dataset.make_initializable_iterator()
             data_init_op = data_op.initializer
-            # next_batch = ((X_fp1_batch, X_fp2_batch,  X_fp3_batch,  X_fp4_batch,
-            #     X_fp5_batch, X_fp6_batch,  X_fp7_batch, X_protein_batch, X_label_batch),
-            #     (Y_fp1_batch, Y_fp2_batch, Y_fp3_batch,  Y_fp4_batch,
-            #     Y_fp5_batch, Y_fp6_batch,  Y_fp7_batch, Y_protein_batch, Y_label_batch)) = data_op.get_next()
             next_batch = ((X_fp1_batch, X_fp2_batch,  X_fp3_batch,  X_fp4_batch,
-                X_fp5_batch, X_fp6_batch, X_fp7_batch, X_protein_batch, X_label_batch),
+                X_fp5_batch, X_fp6_batch,  X_fp7_batch, X_protein_batch, X_label_batch),
                 (Y_fp1_batch, Y_fp2_batch, Y_fp3_batch,  Y_fp4_batch,
-                Y_fp5_batch, Y_fp6_batch, Y_fp7_batch, Y_protein_batch, Y_label_batch)) = data_op.get_next()
+                Y_fp5_batch, Y_fp6_batch,  Y_fp7_batch, Y_protein_batch, Y_label_batch)) = data_op.get_next()
 
 
         print('[dtype] fingerprint1: %s , fingerprint2: %s, fingerprint3: %s, fingerprint4: %s, fingerprint5: %s, fingerprint6: %s , fingerprint7: %s, protein: %s' % (X_fp1_batch.dtype, X_fp2_batch.dtype, X_fp3_batch.dtype, X_fp4_batch.dtype, X_fp5_batch.dtype, X_fp6_batch.dtype, X_fp7_batch.dtype, X_protein_batch.dtype))
-        print('[shape] fingerprint1: %s , fingerprint2: %s, fingerprint3: %s, fingerprint4: %s, fingerprint5: %s, fingerprint6: %s , fingerprint7: %s, protein: %s' % (Y_fp1_batch.get_shape(), Y_fp2_batch.get_shape(),X_fp3_batch.get_shape(), X_fp4_batch.get_shape(), X_fp5_batch.get_shape(), Y_fp6_batch.get_shape(), Y_fp7_batch.get_shape(), X_protein_batch.get_shape()))
+        print('[shape] fingerprint1: %s , fingerprint2: %s, fingerprint3: %s, fingerprint4: %s, fingerprint5: %s, fingerprint6: %s , fingerprint7: %s, protein: %s' % (Y_fp1_batch.get_shape(), Y_fp2_batch.get_shape(),X_fp3_batch.get_shape(), X_fp4_batch.get_shape(), X_fp5_batch.get_shape(), Y_fp6_batch.get_shape(), X_fp7_batch.get_shape(), X_protein_batch.get_shape()))
 
 
         self._x_fp1_tensor = X_fp1_t
@@ -297,6 +305,17 @@ class SiameseNet(NeuralNetworkModel):
         self._x_fp7_tensor = X_fp7_t
         self._x_protein_tensor = X_protein_t
         self._x_label_tensor = X_label_t
+
+        # self._y_fp1_tensor = X_fp1_t
+        # self._y_fp2_tensor = X_fp2_t
+        # self._y_fp3_tensor = X_fp3_t
+        # self._y_fp4_tensor = X_fp4_t
+        # self._y_fp5_tensor = X_fp5_t
+        # self._y_fp6_tensor = X_fp6_t
+        # self._y_fp7_tensor = X_fp7_t
+        # self._y_protein_tensor = X_protein_t
+        # self._y_label_tensor = X_label_t
+
 
         self._x_fp1_batch_tensor = X_fp1_batch
         self._x_fp2_batch_tensor = X_fp2_batch
@@ -318,6 +337,9 @@ class SiameseNet(NeuralNetworkModel):
         self._y_protein_batch_tensor = Y_protein_batch
         self._y_label_batch_tensor = Y_label_batch
 
+
+        # self._matching_batch_tensor = match_result
+
         self.next_batch = next_batch
         self.data_init_op = data_init_op
 
@@ -325,7 +347,6 @@ class SiameseNet(NeuralNetworkModel):
         self,
         _input,
         out_channels,
-        filter,
         reuse=tf.AUTO_REUSE,
         name='p_conv2d',
     ):
@@ -378,8 +399,8 @@ class SiameseNet(NeuralNetworkModel):
 
             pooling = tf.nn.max_pool(
                 activation,
-                ksize=filter,
-                strides=filter,
+                ksize=[1, 1, 2, 2],
+                strides=[1, 1, 2, 2],
                 padding='SAME',
             )
 
@@ -446,6 +467,64 @@ class SiameseNet(NeuralNetworkModel):
 
         return conv2d
 
+    def protein_bert_network(
+        self,
+        proteins,
+        name='protein_bert_network',
+        reuse=tf.AUTO_REUSE,
+        # dropout=0.7,
+        ):
+        print(name + ' ' + '-'*20)
+
+        with tf.variable_scope(name, reuse=reuse):
+            f, g, t = proteins.get_shape()
+            proteins = tf.reshape(
+                proteins,
+                [-1, 1, g, t],
+            )
+            conv_layer1 = self._player_conv2d(
+                _input=proteins,
+                out_channels=256,
+                name='conv2d_p1',
+            )
+            conv_layer2 = self._player_conv2d(
+                _input=conv_layer1,
+                out_channels=64,
+                name='conv2d_p2',
+            )
+            a = conv_layer2.get_shape()[-1]
+            b = conv_layer2.get_shape()[-2]
+
+            reshape = tf.reshape(
+                conv_layer2,
+                [-1,a*b],
+            )
+            dense_layer = tf.layers.dense(
+                tf.nn.elu(reshape),
+                256,
+                name="dense_layer",
+                reuse=reuse,
+            )
+            self._print_layer(
+                name='dense_layer',
+                input_shape=conv_layer2.get_shape(),
+                output_shape=dense_layer.get_shape(),
+            )
+
+            end_layer = tf.layers.dense(
+                tf.nn.elu(dense_layer),
+                64,
+                name="end_layer",
+                reuse=reuse,
+            )
+            self._print_layer(
+                name="end_layer",
+                input_shape=dense_layer.get_shape(),
+                output_shape=end_layer.get_shape(),
+            )
+
+        return end_layer
+
     def separate_network(
         self,
         separate_input,
@@ -454,32 +533,14 @@ class SiameseNet(NeuralNetworkModel):
         # dropout=0.7,
         ):
         print(name + ' ' + '-'*20)
-        print('drop_out chamge')
+
         with tf.variable_scope(name, reuse=reuse):
             input_channels = separate_input.get_shape()[-1]
-
             separate_input = tf.reshape(
                 separate_input,
                 [-1, input_channels, 1, 1],
             )
-            # conv_layer1 = self._player_conv2d(
-            #     _input=separate_input,
-            #     out_channels=512,
-            #     filter=[1, 1, 1, 2],
-            #     name='conv2d_1',
-            # )
-            # conv_layer2 = self._player_conv2d(
-            #     _input=conv_layer1,
-            #     out_channels=256,
-            #     filter=[1, 1, 1, 2],
-            #     name='conv2d_2',
-            # )
-            # conv_layer3 = self._player_conv2d(
-            #     _input=conv_layer2,
-            #     out_channels=128,
-            #     filter=[1, 1, 1, 2],
-            #     name='conv2d_3',
-            # )
+
             # first layer
             conv2d_0 = self._layer_conv2d(
                 input_= tf.nn.elu(separate_input),
@@ -506,58 +567,46 @@ class SiameseNet(NeuralNetworkModel):
                     strides=[1,2,1,1],
                     padding="SAME",
                 ),
-                keep_prob=1.0,
+                keep_prob=self.DROPOUT,
             )
             vector = tf.reshape(
                 conv2d_2,
                 [-1, int(ceil(int(input_channels)/2)*conv2d_1.get_shape()[-1])],
                 name='output_vector',
             )
-            # a = conv_layer3.get_shape()[-1]
-            # b = conv_layer3.get_shape()[-2]
-            # vector = tf.reshape(
-            #     conv_layer3,
-            #     [-1, a*b],
-            #     name='output_vector',
-            # )
-            # self._print_layer(
-            #     name='output_vector',
-            #     input_shape=conv_layer3.get_shape(),
-            #     output_shape=vector.get_shape(),
-            # )
-
+            print(vector.get_shape())
             return vector
 
-    # def _layer_linear(
-    #     self,
-    #     input_x,
-    #     output_size,
-    #     is_training=True,
-    #     stddev=0.02,
-    #     name=None,
-    #     ):
-    #     with tf.variable_scope(name or 'linear'):
-    #
-    #         input_shape = input_x.get_shape().as_list()
-    #
-    #         weight = tf.get_variable(
-    #             "weight",
-    #             shape=[input_shape[1], output_size],
-    #             dtype=tf.float32,
-    #             initializer=tf.random_normal_initializer(
-    #                 stddev=stddev,
-    #             ),
-    #         )
-    #         bias = tf.get_variable(
-    #             "bias",
-    #             shape=[output_size],
-    #             initializer=tf.constant_initializer(0.0),
-    #         )
-    #
-    #         lineared = tf.matmul(input_x, weight) + bias
-    #         print(name, lineared.get_shape())
-    #
-    #     return lineared
+    def _layer_linear(
+        self,
+        input_x,
+        output_size,
+        is_training=True,
+        stddev=0.02,
+        name=None,
+        ):
+        with tf.variable_scope(name or 'linear'):
+
+            input_shape = input_x.get_shape().as_list()
+
+            weight = tf.get_variable(
+                "weight",
+                shape=[input_shape[1], output_size],
+                dtype=tf.float32,
+                initializer=tf.random_normal_initializer(
+                    stddev=stddev,
+                ),
+            )
+            bias = tf.get_variable(
+                "bias",
+                shape=[output_size],
+                initializer=tf.constant_initializer(0.0),
+            )
+
+            lineared = tf.matmul(input_x, weight) + bias
+            print(name, lineared.get_shape())
+
+        return lineared
 
 
     def total_network(
@@ -568,14 +617,13 @@ class SiameseNet(NeuralNetworkModel):
         reuse=tf.AUTO_REUSE,
         ):
         print(name + ' ' + '-'*20)
-        print(name + ' ' + '-'*20)
         with tf.variable_scope(name, reuse=reuse):
 
             # first_layer = self._layer_linear
 
             first_layer = tf.layers.dense(
                 tf.nn.elu(input_total),
-                512,
+                2048,
                 name="first_layer",
                 reuse=reuse,
             )
@@ -586,7 +634,7 @@ class SiameseNet(NeuralNetworkModel):
             )
             second_layer = tf.layers.dense(
                 tf.nn.elu(input_total),
-                128,
+                512,
                 name="second_layer",
                 reuse=reuse,
             )
@@ -595,25 +643,25 @@ class SiameseNet(NeuralNetworkModel):
                 input_shape=first_layer.get_shape(),
                 output_shape=second_layer.get_shape(),
             )
-            protein = tf.layers.dense(
-                tf.nn.elu(input_protein),
-                16,
-                name="protein",
+            third_layer = tf.layers.dense(
+                tf.nn.elu(first_layer),
+                128,
+                name="third_layer",
                 reuse=reuse,
             )
             self._print_layer(
-                name="protein",
-                input_shape=input_protein.get_shape(),
-                output_shape=protein.get_shape(),
+                name="third_layer",
+                input_shape=second_layer.get_shape(),
+                output_shape=third_layer.get_shape(),
             )
             end_layer = tf.concat(
-                (second_layer, protein),
+                (third_layer, input_protein),
                 axis=1,
                 name='end_layer',
             )
             self._print_layer(
                 name='end_layer',
-                input_shape=second_layer.get_shape(),
+                input_shape=third_layer.get_shape(),
                 output_shape=end_layer.get_shape(),
             )
 
@@ -672,51 +720,6 @@ class SiameseNet(NeuralNetworkModel):
             self._print_layer(
                 name=name,
                 input_shape=third_layer.get_shape(),
-                output_shape=end_layer.get_shape(),
-            )
-
-        return end_layer
-
-    def protein_bert_network(
-        self,
-        proteins,
-        name='protein_bert_network',
-        reuse=tf.AUTO_REUSE,
-        # dropout=0.7,
-        ):
-        print(name + ' ' + '-'*20)
-
-        with tf.variable_scope(name, reuse=reuse):
-
-            conv_layer1 = self._player_conv2d(
-                _input=proteins,
-                out_channels=256,
-                filter=[1, 1, 2, 1],
-                name='conv2d_p1',
-            )
-            conv_layer2 = self._player_conv2d(
-                _input=conv_layer1,
-                out_channels=64,
-                filter=[1, 1, 2, 1],
-                name='conv2d_p2',
-            )
-            a = conv_layer2.get_shape()[-1]
-            b = conv_layer2.get_shape()[-2]
-
-            reshape = tf.reshape(
-                conv_layer2,
-                [-1,a*b],
-            )
-
-            end_layer = tf.layers.dense(
-                tf.nn.elu(reshape),
-                64,
-                name="end_layer",
-                reuse=reuse,
-            )
-            self._print_layer(
-                name="end_layer",
-                input_shape=end_layer.get_shape(),
                 output_shape=end_layer.get_shape(),
             )
 
@@ -823,14 +826,14 @@ class SiameseNet(NeuralNetworkModel):
                 name='Input_Y_label',
             )
             match_result = tf.cast(
-                x=tf.math.equal(
+                x=tf.equal(
                     Input_X_label,
                     Input_Y_label,
                 ),
                 dtype=tf.float32,
                 name='x_y_label_match',
-
             )
+
             # Fingerprint1_network
             X_fp1_network = self.separate_network(
                 separate_input=Input_X_fp1,
@@ -915,29 +918,16 @@ class SiameseNet(NeuralNetworkModel):
             #     reuse=True,
             # )
 
-            # X_protein_network = self.protein_bert_network(
-            #     proteins=Input_X_protein,
-            #     name='protein_network',
-            #     reuse=False,
-            # )
-            # Y_protein_network = self.protein_bert_network(
-            #     proteins=Input_Y_protein,
-            #     name='protein_network',
-            #     reuse=True,
-            # )
-            #
-            # X_total_vector = tf.concat(
-            #     (X_fp1_network, X_fp2_network, X_fp3_network, X_fp4_network,
-            #     X_fp5_network, X_fp6_network),
-            #     axis=1,
-            #     name='X_total_network')
-            #
-            # Y_total_vector = tf.concat(
-            #     (Y_fp1_network, Y_fp2_network, Y_fp3_network, Y_fp4_network,
-            #     Y_fp5_network, Y_fp6_network),
-            #     axis=1,
-            #     name='Y_total_network')
-
+            X_protein_network = self.protein_bert_network(
+                proteins=Input_X_protein,
+                name='protein_network',
+                reuse=False,
+            )
+            Y_protein_network = self.protein_bert_network(
+                proteins=Input_Y_protein,
+                name='protein_network',
+                reuse=True,
+            )
             X_total_vector = tf.concat(
                 (X_fp1_network, X_fp2_network, X_fp3_network, X_fp4_network,
                 X_fp5_network, X_fp6_network, X_fp7_network),
@@ -953,13 +943,13 @@ class SiameseNet(NeuralNetworkModel):
 
             X_network = self.total_network(
                 input_total=X_total_vector,
-                input_protein=Input_X_protein,
+                input_protein=X_protein_network,
                 name='total_network',
                 reuse=False,
             )
             Y_network = self.total_network(
                 input_total=Y_total_vector,
-                input_protein=Input_Y_protein,
+                input_protein=Y_protein_network,
                 name='total_network',
                 reuse=True,
             )
@@ -1156,7 +1146,7 @@ class SiameseNet(NeuralNetworkModel):
         input_label=None,
         batch_size=128,
         epoch_num=25,
-        dropout=1.0,
+        dropout=0.7,
         model_save_dir='./model_save',
         pre_trained_path=None,
         reuse=tf.AUTO_REUSE,
@@ -1201,10 +1191,8 @@ class SiameseNet(NeuralNetworkModel):
             max_to_keep=2,  # will keep last 5 epochs as default
         )
         begin_at_epoch = 0
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth=True
 
-        with tf.Session(config=config) as sess:
+        with tf.Session() as sess:
 
             # For TensorBoard (takes care of writing summaries to files)
             train_writer = tf.summary.FileWriter(
@@ -1242,7 +1230,6 @@ class SiameseNet(NeuralNetworkModel):
 
 
             for epoch in range(begin_at_epoch, epoch_num):
-                print('epoch_start')
                 # Load the training dataset into the pipeline
                 # and initialize the metrics local variables
                 sess.run(
@@ -1259,8 +1246,6 @@ class SiameseNet(NeuralNetworkModel):
                         self._x_label_tensor: input_label,
                     }
                 )
-                print('epoch_end ')
-
                 sess.run(self.metrics_init_op)
                 epoch_msg = "Epoch %d/%d\n" % (epoch + 1, epoch_num)
                 sys.stdout.write(epoch_msg)
@@ -1272,14 +1257,13 @@ class SiameseNet(NeuralNetworkModel):
                 train_len = batch_len
 
                 batch_remains_ok = True
-
                 while batch_remains_ok and (batch_num <= batch_len):
                     try:
                         for batch in range(train_len):
                             ((X_fp1_batch, X_fp2_batch,  X_fp3_batch,  X_fp4_batch,
-                                X_fp5_batch, X_fp6_batch,X_fp7_batch, X_protein_batch, X_label_batch),
+                                X_fp5_batch, X_fp6_batch,  X_fp7_batch, X_protein_batch, X_label_batch),
                                 (Y_fp1_batch, Y_fp2_batch, Y_fp3_batch,  Y_fp4_batch,
-                                Y_fp5_batch, Y_fp6_batch, Y_fp7_batch,Y_protein_batch, Y_label_batch)) = sess.run(self.next_batch)
+                                Y_fp5_batch, Y_fp6_batch,  Y_fp7_batch, Y_protein_batch, Y_label_batch)) = sess.run(self.next_batch)
 
                             (summary_train_op,
                              summary_input,

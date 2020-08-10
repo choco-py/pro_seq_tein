@@ -48,7 +48,7 @@ class SiameseNet(NeuralNetworkModel):
         input_protein_shape=(None, 20),
         batch_size=128,
         buffer_size=1000,
-        dropout=1.0,
+        dropout=0.7,
         ):
 
         super().__init__()
@@ -198,6 +198,7 @@ class SiameseNet(NeuralNetworkModel):
 
         buffer_size = self.BUFFER_SIZE
         with tf.name_scope('input'):
+            print('feed_dict')
 
             # First Input
             X_fp1_t = tf.placeholder(
@@ -205,12 +206,14 @@ class SiameseNet(NeuralNetworkModel):
                 input_finger1_shape,
                 name='fingerprint1_tensor_interface',
             )
+            print('feed_dict_fp1')
 
             X_fp2_t = tf.placeholder(
                 tf.float32,
                 input_finger2_shape,
                 name='fingerprint2_tensor_interface',
             )
+            print('feed_dict_fp1')
 
             X_fp3_t = tf.placeholder(
                 tf.float32,
@@ -232,16 +235,22 @@ class SiameseNet(NeuralNetworkModel):
                 input_finger6_shape,
                 name='fingerprint6_tensor_interface',
             )
+            print('feed_dict_fp1')
+
             X_fp7_t = tf.placeholder(
                 tf.float32,
                 input_finger7_shape,
                 name='fingerprint7_tensor_interface',
             )
+            print('feed_dict_fp7')
+
             X_protein_t = tf.placeholder(
                 tf.float32,
                 input_protein_shape,
                 name='protein_tensor_interface',
             )
+            print('feed_dict_pro')
+
             X_label_t = tf.placeholder(
                 tf.float32,
                 shape=[None],
@@ -249,7 +258,7 @@ class SiameseNet(NeuralNetworkModel):
             )
 
             dataset_x = tf.data.Dataset.from_tensor_slices((
-                X_fp1_t, X_fp2_t, X_fp3_t, X_fp4_t, X_fp5_t, X_fp6_t,X_fp7_t,
+                X_fp1_t, X_fp2_t, X_fp3_t, X_fp4_t, X_fp5_t, X_fp6_t,
                 X_protein_t, X_label_t))
 
             dataset_x = dataset_x.shuffle(
@@ -279,24 +288,38 @@ class SiameseNet(NeuralNetworkModel):
             #     (Y_fp1_batch, Y_fp2_batch, Y_fp3_batch,  Y_fp4_batch,
             #     Y_fp5_batch, Y_fp6_batch,  Y_fp7_batch, Y_protein_batch, Y_label_batch)) = data_op.get_next()
             next_batch = ((X_fp1_batch, X_fp2_batch,  X_fp3_batch,  X_fp4_batch,
-                X_fp5_batch, X_fp6_batch, X_fp7_batch, X_protein_batch, X_label_batch),
+                X_fp5_batch, X_fp6_batch, X_protein_batch, X_label_batch),
                 (Y_fp1_batch, Y_fp2_batch, Y_fp3_batch,  Y_fp4_batch,
-                Y_fp5_batch, Y_fp6_batch, Y_fp7_batch, Y_protein_batch, Y_label_batch)) = data_op.get_next()
+                Y_fp5_batch, Y_fp6_batch, Y_protein_batch, Y_label_batch)) = data_op.get_next()
 
 
-        print('[dtype] fingerprint1: %s , fingerprint2: %s, fingerprint3: %s, fingerprint4: %s, fingerprint5: %s, fingerprint6: %s , fingerprint7: %s, protein: %s' % (X_fp1_batch.dtype, X_fp2_batch.dtype, X_fp3_batch.dtype, X_fp4_batch.dtype, X_fp5_batch.dtype, X_fp6_batch.dtype, X_fp7_batch.dtype, X_protein_batch.dtype))
-        print('[shape] fingerprint1: %s , fingerprint2: %s, fingerprint3: %s, fingerprint4: %s, fingerprint5: %s, fingerprint6: %s , fingerprint7: %s, protein: %s' % (Y_fp1_batch.get_shape(), Y_fp2_batch.get_shape(),X_fp3_batch.get_shape(), X_fp4_batch.get_shape(), X_fp5_batch.get_shape(), Y_fp6_batch.get_shape(), Y_fp7_batch.get_shape(), X_protein_batch.get_shape()))
+        print('[dtype] fingerprint1: %s , fingerprint2: %s, fingerprint3: %s, fingerprint4: %s, fingerprint5: %s, fingerprint6: %s , fingerprint7: %s, protein: %s' % (X_fp1_batch.dtype, X_fp2_batch.dtype, X_fp3_batch.dtype, X_fp4_batch.dtype, X_fp5_batch.dtype, X_fp6_batch.dtype, X_fp6_batch.dtype, X_protein_batch.dtype))
+        print('[shape] fingerprint1: %s , fingerprint2: %s, fingerprint3: %s, fingerprint4: %s, fingerprint5: %s, fingerprint6: %s , fingerprint7: %s, protein: %s' % (Y_fp1_batch.get_shape(), Y_fp2_batch.get_shape(),X_fp3_batch.get_shape(), X_fp4_batch.get_shape(), X_fp5_batch.get_shape(), Y_fp6_batch.get_shape(), Y_fp6_batch.get_shape(), X_protein_batch.get_shape()))
 
 
         self._x_fp1_tensor = X_fp1_t
         self._x_fp2_tensor = X_fp2_t
+        print('fpt2ensor')
         self._x_fp3_tensor = X_fp3_t
         self._x_fp4_tensor = X_fp4_t
+
+        print('fp5tensor')
         self._x_fp5_tensor = X_fp5_t
         self._x_fp6_tensor = X_fp6_t
         self._x_fp7_tensor = X_fp7_t
         self._x_protein_tensor = X_protein_t
         self._x_label_tensor = X_label_t
+        print('fptensor')
+        # self._y_fp1_tensor = X_fp1_t
+        # self._y_fp2_tensor = X_fp2_t
+        # self._y_fp3_tensor = X_fp3_t
+        # self._y_fp4_tensor = X_fp4_t
+        # self._y_fp5_tensor = X_fp5_t
+        # self._y_fp6_tensor = X_fp6_t
+        # self._y_fp7_tensor = X_fp7_t
+        # self._y_protein_tensor = X_protein_t
+        # self._y_label_tensor = X_label_t
+
 
         self._x_fp1_batch_tensor = X_fp1_batch
         self._x_fp2_batch_tensor = X_fp2_batch
@@ -317,6 +340,9 @@ class SiameseNet(NeuralNetworkModel):
         self._y_fp7_batch_tensor = Y_fp7_batch
         self._y_protein_batch_tensor = Y_protein_batch
         self._y_label_batch_tensor = Y_label_batch
+
+
+        # self._matching_batch_tensor = match_result
 
         self.next_batch = next_batch
         self.data_init_op = data_init_op
@@ -454,7 +480,7 @@ class SiameseNet(NeuralNetworkModel):
         # dropout=0.7,
         ):
         print(name + ' ' + '-'*20)
-        print('drop_out chamge')
+
         with tf.variable_scope(name, reuse=reuse):
             input_channels = separate_input.get_shape()[-1]
 
@@ -506,7 +532,7 @@ class SiameseNet(NeuralNetworkModel):
                     strides=[1,2,1,1],
                     padding="SAME",
                 ),
-                keep_prob=1.0,
+                keep_prob=self.DROPOUT,
             )
             vector = tf.reshape(
                 conv2d_2,
@@ -568,7 +594,6 @@ class SiameseNet(NeuralNetworkModel):
         reuse=tf.AUTO_REUSE,
         ):
         print(name + ' ' + '-'*20)
-        print(name + ' ' + '-'*20)
         with tf.variable_scope(name, reuse=reuse):
 
             # first_layer = self._layer_linear
@@ -595,19 +620,19 @@ class SiameseNet(NeuralNetworkModel):
                 input_shape=first_layer.get_shape(),
                 output_shape=second_layer.get_shape(),
             )
-            protein = tf.layers.dense(
-                tf.nn.elu(input_protein),
-                16,
-                name="protein",
-                reuse=reuse,
-            )
-            self._print_layer(
-                name="protein",
-                input_shape=input_protein.get_shape(),
-                output_shape=protein.get_shape(),
-            )
+            # third_layer = tf.layers.dense(
+            #     tf.nn.elu(first_layer),
+            #     128,
+            #     name="third_layer",
+            #     reuse=reuse,
+            # )
+            # self._print_layer(
+            #     name="third_layer",
+            #     input_shape=second_layer.get_shape(),
+            #     output_shape=third_layer.get_shape(),
+            # )
             end_layer = tf.concat(
-                (second_layer, protein),
+                (second_layer, input_protein),
                 axis=1,
                 name='end_layer',
             )
@@ -937,7 +962,7 @@ class SiameseNet(NeuralNetworkModel):
             #     Y_fp5_network, Y_fp6_network),
             #     axis=1,
             #     name='Y_total_network')
-
+            print('ggggg')
             X_total_vector = tf.concat(
                 (X_fp1_network, X_fp2_network, X_fp3_network, X_fp4_network,
                 X_fp5_network, X_fp6_network, X_fp7_network),
@@ -953,13 +978,13 @@ class SiameseNet(NeuralNetworkModel):
 
             X_network = self.total_network(
                 input_total=X_total_vector,
-                input_protein=Input_X_protein,
+                input_protein=X_protein,
                 name='total_network',
                 reuse=False,
             )
             Y_network = self.total_network(
                 input_total=Y_total_vector,
-                input_protein=Input_Y_protein,
+                input_protein=Y_protein,
                 name='total_network',
                 reuse=True,
             )
@@ -1156,7 +1181,7 @@ class SiameseNet(NeuralNetworkModel):
         input_label=None,
         batch_size=128,
         epoch_num=25,
-        dropout=1.0,
+        dropout=0.7,
         model_save_dir='./model_save',
         pre_trained_path=None,
         reuse=tf.AUTO_REUSE,

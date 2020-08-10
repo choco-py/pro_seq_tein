@@ -26,7 +26,7 @@ class ProteinSeq(NeuralNetworkModel):
         label_shape=(None, 488),
         batch_size=128,
         buffer_size=1000,
-        dropout=0.7,
+        dropout=1.0,
     ):
 
         super().__init__()
@@ -48,6 +48,7 @@ class ProteinSeq(NeuralNetworkModel):
         self.next_batch = None
         self.data_init_op = None
         self.data_init_op_eval = None
+        self.reduction = None
 
         self.variable_init_op = None
         self.train_op = None
@@ -162,7 +163,7 @@ class ProteinSeq(NeuralNetworkModel):
         self,
         _input,
         out_channels,
-        dropout=0.7,
+        dropout=1.0,
         reuse=tf.AUTO_REUSE,
         name='conv2d',
     ):
@@ -248,7 +249,7 @@ class ProteinSeq(NeuralNetworkModel):
         proteins,
         name='protein_network',
         reuse=tf.AUTO_REUSE,
-        dropout=0.7,
+        dropout=1.0,
         ):
         print(name + ' ' + '-'*20)
 
@@ -310,6 +311,16 @@ class ProteinSeq(NeuralNetworkModel):
                 input_shape=dense_layer1.get_shape(),
                 output_shape=dense_layer2.get_shape(),
             )
+
+            self.reduction = conv_layer4
+            # activation = tf.nn.softmax(
+            #     logis=dense_layer2,
+            # )
+            # self._print_layer(
+            #     name='activation',
+            #     input_shape=dense_layer2.get_shape(),
+            #     output_shape=activation.get_shape(),
+            # )
         print(conv_layer3.name)
 
         print(dense_layer1.name)
@@ -345,9 +356,9 @@ class ProteinSeq(NeuralNetworkModel):
             with tf.name_scope('loss_scope'):
 
                 loss = tf.reduce_mean(
-                    tf.nn.softmax_cross_entropy_with_logits_v2(
-                        logits=Input_X_label,
-                        labels=output,
+                    tf.nn.sigmoid_cross_entropy_with_logits(
+                        logits=output,
+                        labels=Input_X_label,
                     ),
                     name='loss',
                 )
@@ -590,3 +601,63 @@ class ProteinSeq(NeuralNetworkModel):
 
             self.EPOCH_NUM = epoch_num
             print("Training Finished!")
+
+    def evaluate(
+        self,
+        input_protein=None,
+        dropout=1.0,
+        pre_trained_path='./model_save',
+        target_epoch=None,
+        ):
+        self.DROPOUT = dropout
+        print(dropout, self.DROPOUT)
+        assert pre_trained_path is not None, "`pre_trained_path` is mandatory."
+        #global_step = tf.train.get_global_step()
+
+        if self.protein_network is None:
+            tf.reset_default_graph()
+            self.build()
+            print('build again,')
+        with tf.device('/cpu:0'):
+            c = tf.ConfigProto(log_device_placement=True)
+
+
+            with tf.Session(config=c) as sess:
+                ## Initialize model variables
+                sess.run(self.variable_init_op)
+
+                # Reload weights from directory if specified
+                if pre_trained_path is not None:
+                    #logging.info("Restoring parameters from {}".format(restore_from))
+                    if os.path.isdir(pre_trained_path):
+                        last_save_path = os.path.join(pre_trained_path, 'last_weights')
+
+                        if target_epoch:
+                            saved_model = ''.join(
+                                [
+                                    last_save_path + '/',
+                                    'after-epoch-',
+                                    str(target_epoch),
+                                ],
+                            )
+                            last_saver = tf.train.import_meta_graph(
+                                saved_model + '.meta'
+                            )
+                        else:
+                            last_saver = tf.train.Saver(
+                                self.variable,
+                            )
+                            saved_model = tf.train.latest_checkpoint(
+                                last_save_path,
+                            )
+                        #begin_at_epoch = int(saved_model.split('-')[-1])
+                        last_saver.restore(sess, saved_model)
+
+                pred = self.output.eval(
+                    feed_dict={
+                        self.Input_X: input_protein,
+                        # self.Input_X_label: input_label,
+                    },
+                )
+
+        return pred

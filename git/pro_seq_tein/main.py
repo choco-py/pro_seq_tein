@@ -2,18 +2,18 @@ import pickle
 import pandas as pd
 import numpy as np
 import glob
-import src.data_loader as data_preprocessor
+# import src.data_loader as data_preprocessor
 import os
 import tensorflow as tf
-import src.model as ProteinSeq
 path = os.getcwd()
 print(path)
 import importlib
 
 now = path.split('/')[-1]
 if now != 'pro_seq_tein':
-    os.chdir('/Users/soheehwang/git/pro_seq_tein')
+    os.chdir('/home/hsohee/git/pro_seq_tein')
 print(os.getcwd())
+import src.model as ProteinSeq
 
 # %% Data Loader
 
@@ -50,15 +50,48 @@ protein_1st = Protein_Seq(
     label_shape=(None, 488),
     batch_size=128,
     buffer_size=1000,
-    dropout=0.7,
+    dropout=1.0,
 )
 # %%
 protein_1st.train(
     input_=protein_data['BERT'].tolist(),
     input_label=protein_data['label'].tolist(),
     batch_size=128,
-    epoch_num=5,
+    epoch_num=100,
     dropout=0.7,
-    model_save_dir='./model_save',
-    pre_trained_path=None,
+    model_save_dir='./model_save/1st',
+    pre_trained_path='./model_save/1st',
 )
+
+# %%
+sub_data = protein_data.iloc[:200]
+pred = protein_1st.evaluate(
+    input_protein=sub_data['BERT'].tolist(),
+    pre_trained_path='./model_save/1st',
+)
+# %%
+sub_data2 = protein_data.iloc[200:]
+pred2 = protein_1st.evaluate(
+    input_protein=sub_data2['BERT'].tolist(),
+    pre_trained_path='./model_save/1st',
+)
+pred.shape
+all = np.append(pred, pred2)
+all
+tt= all.reshape(-1, 488)
+protein_data['OUTPUT'] = tt.tolist()
+with open('./data/pred_data.pickle', 'wb') as f:
+    pickle.dump(protein_data, f, pickle.HIGHEST_PROTOCOL)
+
+
+import pandas as pd
+
+import os
+
+os.getcwd()
+
+os.getcwd()
+os.getcwd()
+os.chdir('/Users/soheehwang/git/2nd_siameseNet/data/similar_target')
+tt = pd.read_csv('PRMTs_from_Integrity_DB.csv')
+tt.groupby('Category').count()
